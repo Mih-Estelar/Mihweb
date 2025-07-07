@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Painel Admin - Starchefe</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #f00;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      text-shadow: 0 0 8px #ff0000cc;
+    }
+    .followers-section, .comments-section {
+      background-color: #1e1e1e;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+    }
+    label {
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+    input[type="number"] {
+      margin-top: 8px;
+      padding: 10px;
+      font-size: 1.2rem;
+      border-radius: 5px;
+      border: 1px solid #f00;
+      background: #121212;
+      color: #f00;
+      width: 150px;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background-color: #ff0000;
+      border: none;
+      border-radius: 25px;
+      color: white;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 0 10px #ff0000cc;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #cc0000;
+    }
+    .comment-list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .comment-item {
+      border-bottom: 1px solid #ff000055;
+      padding: 10px 0;
+    }
+    .comment-header {
+      font-size: 0.9rem;
+      color: #ff7777;
+      margin-bottom: 5px;
+    }
+    .comment-text {
+      font-size: 1rem;
+      color: #f00;
+      white-space: pre-wrap;
+    }
+    .delete-btn {
+      margin-top: 5px;
+      background-color: #aa0000;
+      border: none;
+      border-radius: 8px;
+      padding: 5px 10px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .delete-btn:hover {
+      background-color: #ff0000;
+    }
+    .logout-btn {
+      margin-top: 20px;
+      background-color: #660000;
+      border: none;
+      border-radius: 25px;
+      padding: 10px 20px;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 0 8px #cc0000cc;
+      transition: background-color 0.3s ease;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .logout-btn:hover {
+      background-color: #990000;
+    }
+  </style>
+</head>
+<body>
+  <h1>Painel Admin - Starchefe</h1>
+
+  <section class="followers-section">
+    <label for="followersInput">Número de inscritos (seguidores):</label><br />
+    <input type="number" id="followersInput" min="0" />
+    <br />
+    <button onclick="saveFollowers()">Salvar Número de Seguidores</button>
+    <p id="followersMessage" style="margin-top: 10px; color: #ff6666;"></p>
+  </section>
+
+  <section class="comments-section">
+    <h2>Comentários dos Usuários</h2>
+    <div class="comment-list" id="commentList">
+      <!-- Comentários aparecerão aqui -->
+    </div>
+  </section>
+
+  <button class="logout-btn" onclick="logout()">Sair do Admin</button>
+
+  <script>
+    // Função para carregar seguidores do localStorage
+    function loadFollowers() {
+      const num = localStorage.getItem('numeroSeguidores');
+      return num !== null ? Number(num) : 109; // valor padrão
+    }
+
+    // Função para salvar seguidores no localStorage
+    function saveFollowers() {
+      const input = document.getElementById('followersInput');
+      const value = parseInt(input.value);
+      const msg = document.getElementById('followersMessage');
+
+      if (isNaN(value) || value < 0) {
+        msg.textContent = 'Por favor, insira um número válido.';
+        return;
+      }
+
+      localStorage.setItem('numeroSeguidores', value);
+      msg.textContent = 'Número de seguidores atualizado!';
+    }
+
+    // Função para carregar comentários do localStorage
+    function loadComments() {
+      const saved = localStorage.getItem('comentariosMihEstelar');
+      return saved ? JSON.parse(saved) : [];
+    }
+
+    // Salvar comentários no localStorage
+    function saveComments(comments) {
+      localStorage.setItem('comentariosMihEstelar', JSON.stringify(comments));
+    }
+
+    // Renderizar comentários
+    function renderComments() {
+      const container = document.getElementById('commentList');
+      const comments = loadComments();
+      container.innerHTML = '';
+
+      if (comments.length === 0) {
+        container.innerHTML = '<p>Nenhum comentário encontrado.</p>';
+        return;
+      }
+
+      comments.forEach((comment, index) => {
+        const div = document.createElement('div');
+        div.className = 'comment-item';
+
+        const header = document.createElement('div');
+        header.className = 'comment-header';
+        header.textContent = `${comment.user} comentou em ${comment.time}`;
+
+        const text = document.createElement('div');
+        text.className = 'comment-text';
+        text.textContent = comment.text;
+
+        const btnDelete = document.createElement('button');
+        btnDelete.className = 'delete-btn';
+        btnDelete.textContent = 'Excluir';
+        btnDelete.onclick = () => {
+          if (confirm('Tem certeza que deseja excluir este comentário?')) {
+            const updatedComments = loadComments();
+            updatedComments.splice(index, 1);
+            saveComments(updatedComments);
+            renderComments();
+          }
+        };
+
+        div.appendChild(header);
+        div.appendChild(text);
+        div.appendChild(btnDelete);
+
+        container.appendChild(div);
+      });
+    }
+
+    function logout() {
+      // Apaga dados do admin e redireciona para pagina1.html
+      localStorage.removeItem('adminUser');
+      window.location.href = 'pagina1.html';
+    }
+
+    // Inicialização ao carregar a página
+    window.onload = () => {
+      const followersInput = document.getElementById('followersInput');
+      followersInput.value = loadFollowers();
+      renderComments();
+    };
+  </script>
+</body>
+</html>
